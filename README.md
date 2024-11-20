@@ -1,36 +1,35 @@
-# BabyReindeerPublication
-This repository gives supplementary information to the publication. The first section will focus on giving an overview of what the different files do. The second section will give more in detail information on the methods used. 
+# Baby Reindeer Publication Repository
 
-# Files
-## Scripts
-- Scraper_Reddit.ipynb --> Code used to scrape the relevant discussions on Reddit
-- Walkthrough.ipynb --> Main code used for the creation and processing of the data. Includes cleaning and data enrichment
-- Reliability.Rmd --> R markdown file that walks through the evaluation process (creating sample to evaluate, and the krippendorff alpha claculation)
-- Graphs_paper.Rmd --> R markdown file used to create the figures used for the paper (and more)
+This repository provides supplementary materials for the publication, including scripts, data, and methodological details. The README is divided into three main sections:
+1. Overview of Files and Their Functions
+2. Methodological Details
+3. Theme Definitions and Evaluation
 
-## Data
-- bbreindeer.csv --> raw data scraped from reddit
-- bbreindeer_clean.csv --> minimal data cleaning was done, now we seperate comments from the user name and have an id variable as well as a parent id variable
-- bbreindeer_clean_with_GPT_for_Martha.csv --> clean data with martha mentions (direct or indirect)
-- martha_presence_validation.csv --> human coding of random sample of martha mentions
-- martha_labels.csv --> final version of martha lables
-- bbreindeer_clean_with_GPT_for_Donny.csv --> clean data with donny mentions (direct or indirect)
-- Donny_presence_validation.csv --> human coding of random sample of donny mentions
-- donny_labels.csv --> final version of donny lables
-- bbreindeer_vader.csv --> vader scores for all comments
-- MasterData.csv --> dataset with all added variables
-- martha_only_all.csv --> subset of master data with only mentions about Martha
-- donny_only_all.csv --> subset of master data with only mentions about Donny
-- donny_and_martha_all.csv --> subset of master data with only mentions about Martha and Donny
-- to_code_sim_aug_11.csv --> sample for manual evaluation
-- donny_empathy_labels.csv --> data with GPT lables added whether comments show empathy towards Donny
-- martha_empathy_labels.csv --> data with GPT lables added whether comments show empathy towards Martha
-- ValidationDonnyMartha.csv --> sample of 100 random comments used to evaluate how well the person detection worked
-- ValidationDonnyMartha_coded.csv --> same as above but after human coding
-- ValidationDonnyResponsible.csv --> sample of 100 random comments used to evaluate how well the "Donny is responsible" theme worked
-- ValidationDonnyResponsible_coded.csv --> same as above but after human coding
-- ValidationMarthaTraditionalStalker.csv --> sample of 100 random comments used to evaluate how well the "Martha as Traditional Stalker" theme worked (it did not work well)
-- ValidationMarthaTraditionalStalker_coded.csv --> same as above but after human coding
+---
+
+## 1. Files Overview
+
+### **Scripts**
+The following scripts were used for data collection, processing, analysis, and visualization:
+- **`Scraper_Reddit.ipynb`**: Python code for scraping Reddit discussions related to the TV series "Baby Reindeer."
+- **`Walkthrough.ipynb`**: The main notebook for data cleaning, enrichment, and processing.
+- **`Reliability.Rmd`**: R Markdown file for evaluating the data's reliability, including Krippendorff's alpha calculations.
+- **`Graphs_paper.Rmd`**: R Markdown file for creating visualizations and figures used in the publication.
+
+### **Data**
+- **Raw and Cleaned Data**:
+  - `bbreindeer.csv`: Raw data scraped from Reddit.
+  - `bbreindeer_clean.csv`: Cleaned data with separated comments, user names, IDs, and parent IDs.
+- **Character Mentions**:
+  - `bbreindeer_clean_with_GPT_for_Martha.csv` and `bbreindeer_clean_with_GPT_for_Donny.csv`: Cleaned data identifying mentions of Martha and Donny.
+  - `martha_presence_validation.csv` and `donny_presence_validation.csv`: Human-coded samples validating mentions of each character.
+- **Empathy Labels**:
+  - `donny_empathy_labels.csv` and `martha_empathy_labels.csv`: GPT-labeled data on empathy expressions for each character.
+- **Validation and Subset Data**:
+  - Subset files such as `martha_only_all.csv`, `donny_only_all.csv`, and `donny_and_martha_all.csv` focus on specific themes or characters.
+  - Validation files (e.g., `ValidationDonnyMartha_coded.csv`) assess the performance of classification methods.
+- **Sentiment Analysis**:
+  - `bbreindeer_vader.csv`: Sentiment analysis scores for all comments using VADER.
 
 # Methods
 ## Data
@@ -49,16 +48,11 @@ To assess the overall mood or tone of Reddit comments, known as valence, we used
 Presence of Themes
 Additionally, we coded comments to identify expressions of empathy towards the characters Donny and Martha. For comments addressing stalking, we also coded whether Martha was depicted as a traditional stalker and whether Donny was considered responsible for being stalked. Chat GPT was used for the initial classification of the comments, followed by manual checks of the results. The definitions for the three main themes coded are provided in Table 1 below.
 
-### ADD TABLE
-Concept
-Definition
-For which character
-Empathy
-Assess whether the reddit comment reflects an understanding or supportive acknowledgment of Donny’s/Martha’s feelings and experiences. Here, empathy is indicated by expressions that recognize Donny's/Martha’s perspective or emotional state in a way that shows sympathy or compassion for their actions.
-Both
-Traditional Stalker
-Assess to what extent Martha is being characterised as a stalker in a traditional mediated sense. This includes behaviours such as unwanted contact, including phone calls, texts, and contact via social media, unwanted gifts, showing up/approaching an individual or their family/friends, monitoring, surveillance, property damage, and threats. Additionally, prior literature shows that it is often assumed that traditional stalkers have underlying mental health issues.
 
-Code a comment as 1 if Martha is characterised as a traditional stalker, 0 if the comment talks about her being a stalker but not in the traditional sense, and 99 if the comment is not about her stalking behaviour. 
-Martha
-Blame for Being stalked
+### Theme Definitions
+
+| **Theme**               | **Definition**                                                                                                                                                                                                                                                                                           | **Relevant Character** |
+|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
+| **Empathy**             | Comments reflecting understanding or supportive acknowledgment of Donny’s/Martha’s feelings and experiences. These include recognition of perspectives or emotional states showing sympathy or compassion.                                                                                             | Both                    |
+| **Traditional Stalker** | Evaluates if Martha is portrayed as a traditional stalker based on behaviors like unwanted contact, monitoring, and threats. Includes assumptions about mental health issues. **Code:** 1 = Traditional stalker, 0 = Non-traditional, 99 = Not about stalking behavior.                                | Martha                  |
+| **Blame for Being Stalked** | Assesses whether Donny is portrayed as responsible for being stalked. For example, comments suggesting his actions or demeanor invited the stalking fall under this category.                                                                                                                         | Donny                  |
