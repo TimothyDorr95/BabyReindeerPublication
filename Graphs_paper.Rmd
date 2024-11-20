@@ -1,0 +1,144 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This notebook walks you through the graphs used for the Paper. 
+```{r}
+library(tidyverse)
+library(gridExtra)
+library(wordcloud)
+library(tm)
+setwd("/Users/tim/Documents/DS_projects/BabyReindeer")
+df <- read_csv("data/MasterData.csv")
+
+#create new variable that combines all the mention data
+df <- df %>% mutate(mentions = as.factor(case_when(donny == 1 & martha == 1 ~ "Both", 
+                                         donny == 1 & martha == 0 ~ "Donny",
+                                         donny == 0 & martha == 1 ~ "Martha",
+                                         donny == 0 & martha == 0 ~ "Neither")), 
+                    title = as.factor(title),)
+
+```
+
+# Episode Trends
+We have two graphs. The first one talks about the different episode and the valence of the comments on average, and the second one shows the average valence about comments that are just about Donny or just about Martha. 
+```{r}
+fig_1 <- df %>% group_by(title) %>% summarize(comments = n(), 
+                                              valence = mean(Vader_compound)) %>% 
+  ggplot(aes(x = title, y = comments, fill = valence)) + 
+  geom_bar(stat = "identity") + 
+  geom_text(aes(label = comments), vjust = -0.5) +
+  xlab(NULL) + 
+  ylab("Number of Comments") + 
+  theme_classic() + 
+  scale_x_discrete(labels = c("Episode 1", "Episode 2", "Episode 3", "Episode 4", "Episode 5", "Episode 6", "Episode 7")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  theme(axis.text.y = element_text(size = 12))+ 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) + 
+  scale_fill_gradient2(low = "red", high = "chartreuse3", midpoint = 0) 
+ggsave("Figures/fig_1.png", fig_1)
+fig_1
+```
+
+```{r}
+fig_2 <- df %>% filter(mentions %in% c("Donny", "Martha")) %>% group_by(title, mentions) %>% summarize(Valence = mean(Vader_compound)) %>% 
+  ggplot(aes(x = title, y = Valence, fill = mentions)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  geom_hline(yintercept = 0.05, linetype = "dashed", linewidth = 0.1) +
+  geom_hline(yintercept = -0.05, linetype = "dashed", , linewidth = 0.1) +
+  xlab(NULL) +
+  ylab("Average Comment Valence") + 
+  labs(fill = "Character") + 
+  scale_x_discrete(labels = c("Episode 1", "Episode 2", "Episode 3", "Episode 4", "Episode 5", "Episode 6", "Episode 7")) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  theme(axis.text.y = element_text(size = 12))+ 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) + 
+  scale_fill_manual(values=c("Donny"="darkgreen", "Martha"="darkorchid4"))
+ggsave("Figures/fig_2.png", fig_2)
+fig_2
+```
+
+
+# Empathy
+This graph plots the empathy that Donny and Martha get shown as a proportion out of all relevant comments that might show empathy. 
+```{r}
+df_m <- read_csv("data/martha_empathy_labels.csv")
+df_d <- read_csv("data/donny_empathy_labels.csv")
+#Graph depicting the proportion of empathy shown towards a character between martha and Donny
+df_mad <- rbind(df_d %>% select(Empathy) %>%mutate(Person = 'Donny') , df_m %>% select(Empathy) %>%mutate(Person = 'Martha'))
+#drop na
+df_mad <- df_mad %>% mutate(Empathy = case_when(Empathy == 99 ~ NA, 
+                                               Empathy == 1 ~ 1, 
+                                               Empathy == 0 ~ 0)) %>% 
+                    filter(!is.na(Empathy))
+
+# Summarize the proportion of 1's for each person
+summary_data <- df_mad %>%
+  group_by(Person) %>%
+  summarize(Proportion = mean(Empathy))
+```
+
+```{r}
+
+# Create the plot
+fig_3 <- ggplot(summary_data, aes(x = Person, y = Proportion, fill = Person)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(Proportion*100, 1), "%")), vjust = -0.5, size = 5) + 
+  labs(y = "Proportion of posts displaying empathy",
+       x = "Character") +
+  scale_fill_manual(values=c("Donny"="darkgreen", "Martha"="darkorchid4")) +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank(),   
+        axis.line = element_line(color = "black") ) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1), limits = c(0, 1))
+
+
+ggsave("Figures/fig_3.png", fig_3)
+fig_3
+```
+
+
+
+# Donny's Responsibility
+This graph shows the proportion of the comments about stalking that blame at least somewhat of the responsibility of being stalked on Donny. 
+
+Version 1
+
+
+```{r}
+df_d %>% mutate(Responsibility = case_when(Responsibility == 1 ~ 'Yes', 
+                                           Responsibility == 0 ~ 'No', 
+                                           Responsibility == 99 ~ 'Not Applicable'), 
+                Responsibility = factor(Responsibility, levels = c('Yes', 'No', 'Not Applicable'))) %>% 
+  group_by(Responsibility) %>% summarize(count = n()) %>% ggplot(aes(x = Responsibility, y = count, fill = Responsibility)) +
+  geom_bar(stat = "identity") + 
+  geom_text(aes(label = count), vjust = -0.5) + 
+  ggtitle('Is Donny Responsible for Being Stalked?') + 
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank(),   
+        axis.line = element_line(color = "black") ) 
+
+  
+```
+Version 2
+
+```{r}
+df_d %>% filter(Responsibility != 99) %>% mutate(Responsibility = case_when(Responsibility == 1 ~ 'Yes', 
+                                           Responsibility == 0 ~ 'No'), 
+                Responsibility = factor(Responsibility, levels = c('Yes', 'No'))) %>% 
+  group_by(Responsibility) %>% summarize(count = n()) %>% ggplot(aes(x = Responsibility, y = count, fill = Responsibility)) +
+  geom_bar(stat = "identity") + 
+  geom_text(aes(label = count), vjust = -0.5) + 
+  ggtitle('Is Donny Responsible for Being Stalked?') + 
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank(),   
+        axis.line = element_line(color = "black") ) 
+
+  
+```

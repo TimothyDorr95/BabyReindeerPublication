@@ -1,0 +1,132 @@
+---
+title: "Validation BBRD"
+author: "Timothy Dorr"
+date: "2024-10-04"
+output: html_document
+---
+
+```{r}
+df <- read_csv('data/MasterData.csv')
+```
+
+# Validation of BBRD codes
+This notebook walks through the validation step of the BBRD codes. There are two types of codes. The first is whether comments are actually about the main protagonists Donny or Martha. The second one is whether the comments about Donny or Martha contain certain themes. 
+
+## Presence of Protagonists
+In this section, we will evaluate how good our Human-GPT evaluation of whether a comment is about Donn/Martha is. We will manually code 100 random comments, and then compare this to the Human-GPT evaluation. We will calculate Krippendorff alpha for intercoder reliability, and precision, recall, and F1 scores to evaluate the performance of the Human-GPT model the computer science way. 
+
+```{r}
+df %>% select(Comment, id) %>% sample_n(100) %>% write_csv('data/ValidationDonnyMartha.csv')
+```
+
+After having coded this data, we will need to calculate how well the score worked: 
+```{r}
+validation <- read_csv('data/ValidationDonnyMartha_coded.csv')
+#merge lables from df
+validation <- validation %>% left_join(df %>% select(id, donny, martha), by = 'id')
+validation %>% head() #Donny Martha is me, donny martha is GPT
+```
+
+Now we have to calculate the metrics Krippendorff alpha, precision, recall, and F1 score. 
+```{r}
+#Krippendorff alpha
+library(irr)
+get_kripp_alpha <- function(df, var1, var2){
+  
+  ratings_matrix <- as.matrix(df %>% select(var1, var2))
+  ratings_matrix <- t(ratings_matrix)
+  kripp_alpha_result <- kripp.alpha(ratings_matrix, method = "nominal")
+  return(kripp_alpha_result$value)
+}
+
+get_kripp_alpha(validation, 'donny', 'Donny')
+get_kripp_alpha(validation, 'martha', 'Martha')
+```
+
+Next lets get precision, recall, and F1
+```{r}
+get_precision <- function(df, var_gpt, var_human) {
+  value <- nrow(df %>% filter(!!sym(var_gpt) == 1 & !!sym(var_human) == 1)) / 
+           nrow(df %>% filter(!!sym(var_gpt) == 1))
+  return(value)
+}
+
+get_recall <- function(df, var_gpt, var_human) {
+  value <- nrow(df %>% filter(!!sym(var_gpt) == 1 & !!sym(var_human) == 1)) / 
+           nrow(df %>% filter(!!sym(var_human) == 1))
+  return(value)
+}
+
+get_f1 <- function(df, var_gpt, var_human) {
+  precision <- get_precision(df, var_gpt, var_human)
+  recall <- get_recall(df, var_gpt, var_human)
+  f1 <- 2 * (precision * recall) / (precision + recall)
+  return(f1)
+}
+
+get_precision(validation, 'donny', 'Donny')
+get_recall(validation, 'donny', 'Donny')
+get_f1(validation, 'donny', 'Donny')
+
+get_precision(validation, 'martha', 'Martha')
+get_recall(validation, 'martha', 'Martha')
+get_f1(validation, 'martha', 'Martha')
+```
+## Donny Responsible
+Here we will evaluate how well the classification of Donny as responsible for his stalking went. For this, it does not make sense to evaluate it on a completly random sample, as the theme can only be present if Donny is present. Thus, we will subset the data we evaluate it on to that where Donny is present. While this can still include irrelevant comments, it at least is more focused as it increases the chance of the theme being present. 
+```{r}
+data_donny <- read_csv("data/donny_empathy_labels.csv")
+
+data_donny %>% select(id, Comment) %>% mutate(Empathy_Tim = NA, 
+                                              Responsible_Tim = NA) %>% sample_n(100) %>%  write_csv('data/ValidationDonnyResponsible.csv')
+```
+```{r}
+validate_donny <- read_csv('data/ValidationDonnyResponsible_coded.csv') %>% left_join(data_donny, by = 'id')
+```
+```{r}
+get_kripp_alpha(validate_donny, 'Responsible_Tim', 'Responsibility')
+get_precision(validate_donny, 'Responsible_Tim', 'Responsibility')
+get_recall(validate_donny, 'Responsible_Tim', 'Responsibility')
+get_f1(validate_donny, 'Responsible_Tim', 'Responsibility')
+```
+
+```{r}
+get_kripp_alpha(validate_donny, 'Empathy_Tim', 'Empathy')
+get_precision(validate_donny, 'Empathy_Tim', 'Empathy')
+get_recall(validate_donny, 'Empathy_Tim', 'Empathy')
+get_f1(validate_donny, 'Empathy_Tim', 'Empathy')
+
+```
+
+
+
+
+
+## Martha Traditional Stalker
+Here, we evaluate how well the classification of Martha as a traditional stalker went. For this, it does not make sense to evaluate it on a completly random sample, as the theme can only be present if Martha is present. Thus, we will subset the data we evaluate it on to that where Martha is present. While this can still include irrelevant comments, it at least is more focused as it increases the chance of the theme being present. 
+
+```{r}
+data_martha <- read_csv("data/martha_empathy_labels.csv")
+
+data_martha %>% select(id, Comment) %>% mutate(Empathy_Tim = NA, TraditionalStalker_Tim = NA) %>% sample_n(100) %>% write_csv('data/ValidationMarthaTraditionalStalker.csv')
+```
+```{r}
+validate_martha <- read_csv('data/ValidationMarthaTraditionalStalker_coded.csv') %>% left_join(data_martha, by = 'id')
+
+
+```
+```{r}
+get_kripp_alpha(validate_martha, 'TraditionalStalker_Tim', 'Traditional_Stalker')
+get_precision(validate_martha, 'TraditionalStalker_Tim', 'Traditional_Stalker')
+get_recall(validate_martha, 'TraditionalStalker_Tim', 'Traditional_Stalker')
+get_f1(validate_martha, 'TraditionalStalker_Tim', 'Traditional_Stalker')
+```
+
+```{r}
+get_kripp_alpha(validate_martha, 'Empathy_Tim', 'Empathy')
+get_precision(validate_martha, 'Empathy_Tim', 'Empathy')
+get_recall(validate_martha, 'Empathy_Tim', 'Empathy')
+get_f1(validate_martha, 'Empathy_Tim', 'Empathy')
+
+```
+
