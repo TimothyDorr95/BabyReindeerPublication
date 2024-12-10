@@ -20,6 +20,7 @@ The following scripts were used for data collection, processing, analysis, and v
 - **Raw and Cleaned Data**:
   - `bbreindeer.csv`: Raw data scraped from Reddit.
   - `bbreindeer_clean.csv`: Cleaned data with separated comments, user names, IDs, and parent IDs.
+  - `MasterData.csv`: Clean Data containing all variables for analysis.
 - **Character Mentions**:
   - `bbreindeer_clean_with_GPT_for_Martha.csv` and `bbreindeer_clean_with_GPT_for_Donny.csv`: Cleaned data identifying mentions of Martha and Donny.
   - `martha_presence_validation.csv` and `donny_presence_validation.csv`: Human-coded samples validating mentions of each character.
